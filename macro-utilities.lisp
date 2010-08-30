@@ -4,14 +4,11 @@
 
 (in-package :com.gigamonkeys.macro-utilities)
 
+;;; Exported
+
 (defmacro with-gensyms ((&rest names) &body body)
   `(let ,(loop for n in names collect `(,n (make-symbol ,(string n))))
      ,@body))
-
-(defmacro with-multiple-gensyms ((&rest names) value-producing-form &body body)
-  `(with-gensyms (,@names)
-     (multiple-value-bind (,@names) ,value-producing-form
-       ,@body)))
 
 (defmacro once-only ((&rest names) &body body)
   (let ((gensyms (loop for n in names collect (gensym (string n)))))
@@ -19,6 +16,16 @@
       `(let (,,@(loop for g in gensyms for n in names collect ``(,,g ,,n)))
         ,(let (,@(loop for n in names for g in gensyms collect `(,n ,g)))
            ,@body)))))
+
+(defun spliceable (value)
+  (if value (list value) nil))
+
+;;; Unexported -- basically experimental.
+
+(defmacro with-multiple-gensyms ((&rest names) value-producing-form &body body)
+  `(with-gensyms (,@names)
+     (multiple-value-bind (,@names) ,value-producing-form
+       ,@body)))
 
 (defmacro with-clauses ((&rest pattern) list &body expansion)
   "Generate a list of clauses to be spliced into a macro expansion by
@@ -28,9 +35,6 @@
     `(loop for ,item in ,list collect
 	  (destructuring-bind ,pattern ,item
 	    ,@expansion)))))
-
-(defun spliceable (value)
-  (if value (list value) nil))
 
 (defmacro ppme (form &environment env)
   (progn
