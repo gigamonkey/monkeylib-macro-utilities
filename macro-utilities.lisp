@@ -6,19 +6,24 @@
 
 ;;; Exported
 
-(defmacro with-gensyms ((&rest names) &body body)
-  `(let ,(loop for n in names collect `(,n (make-symbol ,(string n))))
-     ,@body))
+(defun gensyms (names)
+  (mapcar (lambda (x) (gensym (string x))) names))
 
-(defmacro once-only ((&rest names) &body body)
-  (let ((gensyms (loop for n in names collect (gensym (string n)))))
-    `(let (,@(loop for g in gensyms collect `(,g (gensym))))
-      `(let (,,@(loop for g in gensyms for n in names collect ``(,,g ,,n)))
-        ,(let (,@(loop for n in names for g in gensyms collect `(,n ,g)))
-           ,@body)))))
+(defmacro mapticks (form &rest lists)
+  `(mapcar (lambda (,@lists) ,form) ,@lists))
+
+(defmacro with-gensyms ((&rest n) &body body)
+  `(let ,(mapticks `(,n (gensym ,(string n))) n) ,@body))
+
+(defmacro once-only ((&rest n) &body body &aux (g (gensyms n)))
+  ``(let (,,@(mapticks ``(,',g ,,n) g n))
+      ,(let (,@(mapticks `(,n ',g) n g)) ,@body)))
 
 (defun spliceable (value)
   (if value (list value) nil))
+
+(defun gensyms (names)
+  (mapcar (lambda (x) (gensym (string x))) names))
 
 ;;; Unexported -- basically experimental.
 
@@ -36,15 +41,5 @@
 	  (destructuring-bind ,pattern ,item
 	    ,@expansion)))))
 
-(defmacro ppme (form &environment env)
-  (progn
-    (write (macroexpand-1 form env)
-           :length nil
-           :level nil
-           :circle nil
-           :pretty t
-           :gensym nil
-           :right-margin 83
-           :case :downcase)
-    nil))
+
 

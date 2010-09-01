@@ -9,5 +9,7 @@
   (:export 
    :with-gensyms
    :once-only
+   :mapticks
+   :gensyms
    :spliceable))
            
