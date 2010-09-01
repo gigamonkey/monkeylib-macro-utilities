@@ -7,9 +7,9 @@
 (defpackage :com.gigamonkeys.macro-utilities
   (:use :common-lisp)
   (:export 
+   :gensyms
+   :mapticks
    :with-gensyms
    :once-only
-   :mapticks
-   :gensyms
    :spliceable))
            
